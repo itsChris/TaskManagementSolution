@@ -1,0 +1,22 @@
+﻿@inherits LayoutComponentBase
+
+<div class="d-flex flex-column vh-100">
+    <!-- Navbar -->
+    <NavMenu />
+
+    <!-- Main Content -->
+    <main class="container-fluid flex-grow-1 py-3">
+        @Body
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3">
+        TaskManagement by Solvia © 2012-@DateTime.Now.Year
+    </footer>
+</div>
+
+<div id="blazor-error-ui" class="alert alert-danger d-none">
+    <strong>An unhandled error has occurred.</strong>
+    <a href="" class="btn btn-link reload">Reload</a>
+    <button class="btn btn-link dismiss">🗙</button>
+</div>

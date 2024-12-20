@@ -1,0 +1,92 @@
+﻿@using TaskManagement.Blazor.Services
+@using TaskManagement.Shared.Enums
+@using TaskManagement.Shared.Models
+<h3>Edit Task</h3>
+
+<EditForm Model="@task" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="title">Title</label>
+        <InputText id="title" class="form-control" @bind="task.Title" />
+        <ValidationMessage For="@(() => task.Title)" />
+    </div>
+
+    <div class="form-group">
+        <label for="description">Description</label>
+        <InputTextArea id="description" class="form-control" @bind="task.Description" />
+        <ValidationMessage For="@(() => task.Description)" />
+    </div>
+
+    <div class="form-group">
+        <label for="status">Status</label>
+        <InputSelect id="status" class="form-control" @bind="task.Status">
+            <option value="">Select Status</option>
+            @foreach (var status in Enum.GetValues<TaskState>())
+            {
+                <option value="@status">@status</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="@(() => task.Status)" />
+    </div>
+
+    <div class="form-group">
+        <label for="dueDate">Due Date</label>
+        <InputDate @bind="task.DueDate" class="form-control" />
+        <ValidationMessage For="@(() => task.DueDate)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+</EditForm>
+
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@code {
+    [Parameter]
+    public int TaskId { get; set; }
+
+    private TaskDto task = new TaskDto();
+    private string? errorMessage;
+
+    [Inject]
+    private ITaskApiClient TaskApiClient { get; set; } = default!;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            task = await TaskApiClient.GetTaskByIdAsync(TaskId);
+            if (task == null)
+            {
+                errorMessage = "Task not found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred while loading the task. Please try again.";
+            Console.Error.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            await TaskApiClient.UpdateTaskAsync(task);
+            errorMessage = null;
+            NavigationManager.NavigateTo("/tasks");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred while saving the task. Please try again.";
+            Console.Error.WriteLine($"Error: {ex.Message}");
+        }
+    }
+}

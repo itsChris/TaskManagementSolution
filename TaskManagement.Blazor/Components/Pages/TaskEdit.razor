@@ -1,0 +1,105 @@
+﻿@page "/taskedit/{TaskId:int}"
+
+@using TaskManagement.Blazor.Services
+@using TaskManagement.Shared.Enums
+@using TaskManagement.Shared.Models
+@using Microsoft.AspNetCore.Components.Forms
+
+<div class="container my-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-warning text-white">
+            <h3 class="mb-0">Edit Task</h3>
+        </div>
+        <div class="card-body">
+            <EditForm Model="@task" OnValidSubmit="@HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="alert alert-danger" />
+
+                <div class="form-group mb-3">
+                    <label for="title" class="form-label">Title</label>
+                    <InputText id="title" class="form-control" @bind-Value="task.Title" />
+                    <ValidationMessage For="@(() => task.Title)" />
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <InputTextArea id="description" class="form-control" @bind-Value="task.Description" />
+                    <ValidationMessage For="@(() => task.Description)" />
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="status" class="form-label">Status</label>
+                    <InputSelect id="status" class="form-control" @bind-Value="task.Status" TValue="TaskState">
+                        <option value="">Select Status</option>
+                        @foreach (var status in Enum.GetValues<TaskState>())
+                        {
+                                <option value="@status">@status</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => task.Status)" />
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="dueDate" class="form-label">Due Date</label>
+                    <InputDate id="dueDate" class="form-control" @bind-Value="task.DueDate" TValue="DateTime?" />
+                    <ValidationMessage For="@(() => task.DueDate)" />
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-success btn-lg">Save Changes</button>
+                </div>
+            </EditForm>
+
+            @if (errorMessage != null)
+            {
+                    <div class="alert alert-danger mt-3">@errorMessage</div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int TaskId { get; set; }
+
+    private TaskDto task = new TaskDto();
+    private string? errorMessage;
+
+    [Inject]
+    private ITaskApiClient TaskApiClient { get; set; } = default!;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            task = await TaskApiClient.GetTaskByIdAsync(TaskId);
+            if (task == null)
+            {
+                errorMessage = "Task not found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred while loading the task. Please try again.";
+            Console.Error.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            await TaskApiClient.UpdateTaskAsync(task);
+            errorMessage = null;
+            NavigationManager.NavigateTo("/tasks");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred while saving the task. Please try again.";
+            Console.Error.WriteLine($"Error: {ex.Message}");
+        }
+    }
+}

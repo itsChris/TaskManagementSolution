@@ -1,0 +1,29 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<div class="home-page">
+    <div class="jumbotron text-center bg-primary text-white py-5">
+        <h1 class="display-4">Welcome to TaskManagement</h1>
+        <p class="lead">Effortlessly manage your tasks with ease and efficiency.</p>
+    </div>
+
+    <div class="container text-center py-4">
+        <h2>Get Started</h2>
+        <p>
+            Navigate through the app to create, view, and manage your tasks. Click on
+            <strong>Task List</strong> to view existing tasks or <strong>Create Task</strong> to add a new one.
+        </p>
+        <button class="btn btn-primary btn-lg mt-3" @onclick="NavigateToTasks">View Tasks</button>
+    </div>
+</div>
+
+@code {
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    private void NavigateToTasks()
+    {
+        NavigationManager.NavigateTo("/tasks");
+    }
+}

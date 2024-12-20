@@ -1,0 +1,100 @@
+﻿<h3>Task List</h3>
+
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (tasks == null)
+{
+    <p>Loading tasks...</p>
+}
+else if (!tasks.Any())
+{
+    <p>No tasks available.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Due Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var task in tasks)
+            {
+                <tr>
+                    <td>@task.Title</td>
+                    <td>@task.Description</td>
+                    <td>@task.Status</td>
+                    <td>@task.CreatedAt.ToString("yyyy-MM-dd")</td>
+                    <td>@(task.DueDate?.ToString("yyyy-MM-dd") ?? "N/A")</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" @onclick="() => EditTask(task.Id)">Edit</button>
+                        <button class="btn btn-danger btn-sm" @onclick="() => DeleteTask(task.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <button class="btn btn-success" @onclick="CreateTask">Create New Task</button>
+}
+
+@code {
+    private List<TaskDto>? tasks;
+    private string? errorMessage;
+
+    [Inject]
+    private ITaskApiClient TaskApiClient { get; set; } = default!;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            tasks = (await TaskApiClient.GetTasksAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred while fetching tasks. Please try again.";
+            Console.Error.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private void CreateTask()
+    {
+        NavigationManager.NavigateTo("/taskcreate");
+    }
+
+    private void EditTask(int taskId)
+    {
+        NavigationManager.NavigateTo($"/taskedit/{taskId}");
+    }
+
+    private async Task DeleteTask(int taskId)
+    {
+        try
+        {
+            var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete Task ID {taskId}?");
+            if (!confirmed) return;
+
+            await TaskApiClient.DeleteTaskAsync(taskId);
+            tasks = tasks.Where(t => t.Id != taskId).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred while deleting the task. Please try again.";
+            Console.Error.WriteLine($"Error: {ex.Message}");
+        }
+    }
+}
