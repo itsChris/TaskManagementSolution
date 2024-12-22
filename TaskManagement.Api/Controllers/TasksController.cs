@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TaskManagement.Api.Services;
 using TaskManagement.Shared.Models;
-using Microsoft.Extensions.Logging;
 
 namespace TaskManagement.Api.Controllers
 {
@@ -18,12 +18,12 @@ namespace TaskManagement.Api.Controllers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        [HttpGet]
+        [HttpGet, Authorize]
         public async Task<IActionResult> GetAllTasks()
         {
             try
             {
-                _logger.LogInformation("Fetching all tasks.");
+                _logger.LogInformation("Fetching all tasks. User: {User}", User?.Identity?.Name);
                 var tasks = await _taskService.GetTasksAsync();
                 return Ok(tasks);
             }

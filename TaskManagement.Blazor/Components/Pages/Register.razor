@@ -1,0 +1,95 @@
+﻿@page "/register"
+@using TaskManagement.Shared.Models
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-success text-white text-center">
+                    <h3 class="mb-0">Register</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="registerModel" OnValidSubmit="PerformRegistration">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="alert alert-danger" />
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <InputText id="email" class="form-control" @bind-Value="registerModel.Email" placeholder="Enter your email" />
+                            <ValidationMessage For="@(() => registerModel.Email)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <InputText id="password" class="form-control" @bind-Value="registerModel.Password" type="password" placeholder="Enter your password" />
+                            <ValidationMessage For="@(() => registerModel.Password)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <InputText id="confirmPassword" class="form-control" @bind-Value="registerModel.ConfirmPassword" type="password" placeholder="Confirm your password" />
+                            <ValidationMessage For="@(() => registerModel.ConfirmPassword)" />
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-success btn-lg w-100">Register</button>
+                        </div>
+                    </EditForm>
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger mt-3 text-center">
+                            @errorMessage
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegisterModel registerModel = new();
+    private string? errorMessage;
+
+    private async Task PerformRegistration()
+    {
+        try
+        {
+            // Use named HttpClient
+            var client = HttpClientFactory.CreateClient("DefaultClient");
+            var response = await client.PostAsJsonAsync("/register", registerModel);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Navigate to the login page or show a success message
+                NavigationManager.NavigateTo("/login");
+            }
+            else
+            {
+                var apiError = await response.Content.ReadAsStringAsync();
+
+                if (!string.IsNullOrEmpty(apiError))
+                {
+                    // Attempt to parse error details if provided
+                    errorMessage = $"Registration failed: {apiError}";
+                }
+                else
+                {
+                    errorMessage = "Registration failed. Please ensure the data is correct and try again.";
+                }
+            }
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = $"A network error occurred: {httpEx.Message}. Please check your internet connection.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An unexpected error occurred: {ex.Message}. Please try again later.";
+        }
+    }
+}
+

@@ -1,20 +1,33 @@
-﻿using TaskManagement.Shared.Models;
+﻿using Blazored.LocalStorage;
+using TaskManagement.Shared.Models;
 
 namespace TaskManagement.Blazor.Services
 {
     public class TaskApiClient : ITaskApiClient
     {
         private readonly HttpClient _httpClient;
+        private readonly ILocalStorageService _localStorage;
 
-        public TaskApiClient(HttpClient httpClient)
+        public TaskApiClient(HttpClient httpClient, ILocalStorageService localStorage)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            _localStorage = localStorage ?? throw new ArgumentNullException(nameof(localStorage));
+        }
+
+        private async Task AddAuthorizationHeaderAsync()
+        {
+            var token = await _localStorage.GetItemAsync<string>("authToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            }
         }
 
         public async Task<IEnumerable<TaskDto>> GetTasksAsync()
         {
             try
             {
+                await AddAuthorizationHeaderAsync();
                 var tasks = await _httpClient.GetFromJsonAsync<IEnumerable<TaskDto>>("api/tasks");
                 return tasks ?? new List<TaskDto>();
             }

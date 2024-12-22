@@ -1,9 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TaskManagement.Api.Models;
 
 namespace TaskManagement.Api.Data
 {
-    public class TaskDbContext : DbContext
+    public class TaskDbContext : IdentityDbContext<IdentityUser>
     {
         public TaskDbContext(DbContextOptions<TaskDbContext> options)
             : base(options)
@@ -22,6 +24,42 @@ namespace TaskManagement.Api.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Identity Tables Customization (optional)
+            modelBuilder.Entity<IdentityUser>(entity =>
+            {
+                entity.ToTable("Users");
+            });
+
+            modelBuilder.Entity<IdentityRole>(entity =>
+            {
+                entity.ToTable("Roles");
+            });
+
+            modelBuilder.Entity<IdentityUserRole<string>>(entity =>
+            {
+                entity.ToTable("UserRoles");
+            });
+
+            modelBuilder.Entity<IdentityUserClaim<string>>(entity =>
+            {
+                entity.ToTable("UserClaims");
+            });
+
+            modelBuilder.Entity<IdentityUserLogin<string>>(entity =>
+            {
+                entity.ToTable("UserLogins");
+            });
+
+            modelBuilder.Entity<IdentityRoleClaim<string>>(entity =>
+            {
+                entity.ToTable("RoleClaims");
+            });
+
+            modelBuilder.Entity<IdentityUserToken<string>>(entity =>
+            {
+                entity.ToTable("UserTokens");
+            });
 
             // TaskEntity-Konfiguration
             modelBuilder.Entity<TaskEntity>(entity =>
